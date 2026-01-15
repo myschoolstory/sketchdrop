@@ -1,6 +1,6 @@
 # Cloudflare Workers Fullstack Template
 
-[cloudflarebutton]
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/myschoolstory/sketchdrop)
 
 A production-ready boilerplate for building fullstack applications on Cloudflare Workers. Combines a powerful backend with Durable Objects for stateful entities and a modern React frontend with shadcn/ui.
 
@@ -86,7 +86,7 @@ bun run deploy
 - Deploys Worker with SPA routing (`assets` in `wrangler.jsonc`)
 - Sets up Durable Objects automatically
 
-[cloudflarebutton]
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/myschoolstory/sketchdrop)
 
 **Post-Deploy**:
 - View logs: `wrangler tail`
