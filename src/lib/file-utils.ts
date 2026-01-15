@@ -16,12 +16,11 @@ export async function processFiles(files: File[]): Promise<ProcessedFile[]> {
         if (!entry.dir) {
           const content = await entry.async('base64');
           const type = getMimeType(path);
-          const size = (entry.options as any)?.uncompressedSize ?? 0;
           processed.push({
             path,
             content,
             type,
-            size
+            size: entry._data.uncompressedSize || 0
           });
         }
       }
@@ -48,8 +47,7 @@ function fileToBase64(file: File): Promise<string> {
     reader.onerror = error => reject(error);
   });
 }
-export function getMimeType(filename: string | null | undefined): string {
-  if (!filename) return 'application/octet-stream';
+function getMimeType(filename: string): string {
   const ext = filename.split('.').pop()?.toLowerCase();
   const mimes: Record<string, string> = {
     'html': 'text/html',
@@ -61,17 +59,9 @@ export function getMimeType(filename: string | null | undefined): string {
     'jpeg': 'image/jpeg',
     'gif': 'image/gif',
     'svg': 'image/svg+xml',
-    'webp': 'image/webp',
-    'avif': 'image/avif',
-    'ico': 'image/x-icon',
-    'bmp': 'image/bmp',
-    'tiff': 'image/tiff',
     'pdf': 'application/pdf',
     'txt': 'text/plain',
-    'json': 'application/json',
-    'xml': 'application/xml',
-    'md': 'text/markdown',
-    'zip': 'application/zip'
+    'json': 'application/json'
   };
   return mimes[ext || ''] || 'application/octet-stream';
 }
