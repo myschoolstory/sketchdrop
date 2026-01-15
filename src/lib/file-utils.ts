@@ -16,10 +16,7 @@ export async function processFiles(files: File[]): Promise<ProcessedFile[]> {
         if (!entry.dir) {
           const content = await entry.async('base64');
           const type = getMimeType(path);
-          // Safely get uncompressed size if available, otherwise estimate or use 0
-          // JSZipObject doesn't expose _data publicly in types, so we use internal metadata if possible
-          const metadata = (entry as any)._data || {};
-          const size = metadata.uncompressedSize || 0;
+          const size = (entry.options as any)?.uncompressedSize ?? 0;
           processed.push({
             path,
             content,
