@@ -16,12 +16,11 @@ export async function processFiles(files: File[]): Promise<ProcessedFile[]> {
         if (!entry.dir) {
           const content = await entry.async('base64');
           const type = getMimeType(path);
-          const size = (entry.options as any)?.uncompressedSize ?? 0;
           processed.push({
             path,
             content,
             type,
-            size
+            size: entry._data.uncompressedSize || 0
           });
         }
       }
