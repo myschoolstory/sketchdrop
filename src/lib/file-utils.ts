@@ -48,7 +48,7 @@ function fileToBase64(file: File): Promise<string> {
     reader.onerror = error => reject(error);
   });
 }
-function getMimeType(filename: string): string {
+export function getMimeType(filename: string): string {
   const ext = filename.split('.').pop()?.toLowerCase();
   const mimes: Record<string, string> = {
     'html': 'text/html',
@@ -60,9 +60,17 @@ function getMimeType(filename: string): string {
     'jpeg': 'image/jpeg',
     'gif': 'image/gif',
     'svg': 'image/svg+xml',
+    'webp': 'image/webp',
+    'avif': 'image/avif',
+    'ico': 'image/x-icon',
+    'bmp': 'image/bmp',
+    'tiff': 'image/tiff',
     'pdf': 'application/pdf',
     'txt': 'text/plain',
-    'json': 'application/json'
+    'json': 'application/json',
+    'xml': 'application/xml',
+    'md': 'text/markdown',
+    'zip': 'application/zip'
   };
   return mimes[ext || ''] || 'application/octet-stream';
 }

@@ -1,12 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
 import type { ShareMetadata } from '@shared/types';
 import { SketchButton } from '@/components/ui/sketch-button';
-import { ExternalLink, ArrowLeft, Download, FileText, Globe, Copy, Check } from 'lucide-react';
+import { MediaPreview } from '@/components/MediaPreview';
+import { 
+  ExternalLink, 
+  ArrowLeft, 
+  Download, 
+  FileText, 
+  Globe, 
+  Copy, 
+  Check, 
+  Info, 
+  Calendar, 
+  HardDrive 
+} from 'lucide-react';
 import { toast } from 'sonner';
-import { useState } from 'react';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 export function ViewPage() {
   const { id } = useParams<{ id: string }>();
   const [copied, setCopied] = useState(false);
@@ -24,16 +41,22 @@ export function ViewPage() {
   if (isLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-20 text-center">
-        <h2 className="text-3xl font-display animate-pulse">Loading Sketch...</h2>
+        <div className="inline-block p-4 sketch-card animate-sketch-bounce bg-sketch-yellow">
+           <Globe className="w-12 h-12 animate-spin-slow" />
+        </div>
+        <h2 className="text-3xl font-display mt-6">Fetching your sketch...</h2>
       </div>
     );
   }
   if (error || !share) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-20 text-center space-y-4">
-        <h2 className="text-3xl font-display text-sketch-pink">Sketch Not Found</h2>
+      <div className="max-w-7xl mx-auto px-4 py-20 text-center space-y-6">
+        <h2 className="text-4xl font-display text-sketch-pink">Sketch Not Found</h2>
+        <p className="font-hand text-xl max-w-md mx-auto italic">
+          The page you're looking for has been erased or never existed.
+        </p>
         <Link to="/">
-          <SketchButton variant="secondary">Go Home</SketchButton>
+          <SketchButton variant="secondary">Back to SketchPad</SketchButton>
         </Link>
       </div>
     );
@@ -43,23 +66,35 @@ export function ViewPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="py-8 md:py-10 lg:py-12 space-y-8">
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-sketch-yellow/10 p-6 sketch-card relative">
-          <div className="space-y-1">
-            <Link to="/" className="inline-flex items-center text-sm font-bold hover:underline mb-2">
-              <ArrowLeft className="w-4 h-4 mr-1" /> Back to SketchPad
+        <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+          <div className="space-y-4 flex-1">
+            <Link to="/" className="inline-flex items-center text-sm font-bold hover:underline">
+              <ArrowLeft className="w-4 h-4 mr-1" /> Back to Pad
             </Link>
-            <h1 className="text-4xl font-display font-bold flex items-center gap-3">
-              {share.isWebsite ? <Globe className="w-8 h-8" /> : <FileText className="w-8 h-8" />}
-              {share.title}
-            </h1>
-            <p className="text-muted-foreground font-hand text-lg italic">
-              Created {new Date(share.createdAt).toLocaleDateString()} • {share.fileCount} {share.fileCount === 1 ? 'file' : 'files'}
-            </p>
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-sketch-yellow sketch-card rotate-[-2deg]">
+                {share.isWebsite ? <Globe className="w-8 h-8" /> : <FileText className="w-8 h-8" />}
+              </div>
+              <div className="space-y-1">
+                <h1 className="text-4xl md:text-5xl font-display font-bold leading-tight">
+                  {share.title}
+                </h1>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-muted-foreground font-hand text-lg">
+                  <span className="flex items-center gap-1">
+                    <Calendar className="w-4 h-4" /> {new Date(share.createdAt).toLocaleDateString()}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <HardDrive className="w-4 h-4" /> {(share.totalSize / 1024).toFixed(1)} KB
+                  </span>
+                  <span>• {share.fileCount} {share.fileCount === 1 ? 'file' : 'files'}</span>
+                </div>
+              </div>
+            </div>
           </div>
           <div className="flex flex-wrap gap-3">
-            <SketchButton variant="secondary" onClick={handleCopyLink}>
+            <SketchButton variant="secondary" onClick={handleCopyLink} className="min-w-[140px]">
               {copied ? <Check className="w-4 h-4 mr-2 text-green-600" /> : <Copy className="w-4 h-4 mr-2" />}
-              Copy Link
+              {copied ? 'Copied!' : 'Copy Link'}
             </SketchButton>
             <a href={contentUrl} download={share.title}>
               <SketchButton variant="secondary">
@@ -73,38 +108,75 @@ export function ViewPage() {
             </a>
           </div>
         </header>
-        <main className="w-full h-[75vh] sketch-card overflow-hidden bg-white flex flex-col group relative">
-          <div className="bg-sketch-black px-4 py-2 border-b-3 border-sketch-black flex items-center justify-between text-white">
-            <div className="flex gap-2">
-              <div className="w-3 h-3 rounded-full bg-sketch-pink border border-white/20" />
-              <div className="w-3 h-3 rounded-full bg-sketch-yellow border border-white/20" />
-              <div className="w-3 h-3 rounded-full bg-green-400 border border-white/20" />
-            </div>
-            <span className="text-xs font-mono truncate px-4 opacity-70 hidden md:block">{fullContentUrl}</span>
-            <div className="w-16" />
-          </div>
-          <div className="flex-1 bg-white relative overflow-auto">
-            {share.isWebsite ? (
-              <iframe
-                src={contentUrl}
-                className="w-full h-full border-none"
-                title={share.title}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center p-8">
-                {share.mainFile?.match(/\.(jpg|jpeg|png|gif|svg)$/i) ? (
-                  <img src={contentUrl} alt={share.title} className="max-w-full max-h-full sketch-card shadow-sketch-lg" />
-                ) : (
-                  <embed src={contentUrl} type="application/pdf" className="w-full h-full sketch-card" />
-                )}
+        <main className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          <div className="lg:col-span-3 space-y-6">
+            <div className="w-full h-[65vh] md:h-[75vh] sketch-card overflow-hidden bg-white flex flex-col group relative">
+              <div className="bg-sketch-black px-4 py-2 border-b-3 border-sketch-black flex items-center justify-between text-white shrink-0">
+                <div className="flex gap-2">
+                  <div className="w-3 h-3 rounded-full bg-sketch-pink border border-white/20" />
+                  <div className="w-3 h-3 rounded-full bg-sketch-yellow border border-white/20" />
+                  <div className="w-3 h-3 rounded-full bg-green-400 border border-white/20" />
+                </div>
+                <span className="text-[10px] md:text-xs font-mono truncate px-4 opacity-70 hidden sm:block">
+                  {fullContentUrl}
+                </span>
+                <div className="w-12 h-1 rounded-full bg-white/20" />
               </div>
-            )}
-          </div>
-          <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-            <div className="bg-sketch-yellow border-2 border-sketch-black px-3 py-1 text-xs font-bold shadow-sketch rotate-3">
-              LIVE PREVIEW
+              <div className="flex-1 overflow-hidden">
+                <MediaPreview 
+                  url={contentUrl} 
+                  type={share.isWebsite ? 'text/html' : (share.files?.[share.mainFile!]?.type || 'application/octet-stream')}
+                  title={share.title}
+                  isWebsite={share.isWebsite}
+                />
+              </div>
+              <div className="absolute bottom-4 left-4 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                <div className="bg-sketch-purple text-white border-2 border-sketch-black px-3 py-1 text-[10px] font-bold shadow-sketch -rotate-2">
+                  SKETCHDROP RENDERER
+                </div>
+              </div>
             </div>
           </div>
+          <aside className="space-y-6">
+            <div className="sketch-card p-6 bg-white space-y-4">
+              <h4 className="font-display text-xl flex items-center gap-2">
+                <Info className="w-5 h-5" /> Details
+              </h4>
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="files" className="border-sketch-black/10">
+                  <AccordionTrigger className="font-hand text-lg py-2 hover:no-underline">
+                    File List ({share.fileCount})
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-2 pt-2 max-h-[300px] overflow-y-auto pr-2">
+                      {share.mainFile && (
+                        <div className="text-sm font-mono p-2 bg-sketch-yellow/10 border border-sketch-black/5 rounded truncate flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-sketch-pink shrink-0" />
+                          {share.mainFile}
+                        </div>
+                      )}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="share" className="border-none">
+                  <AccordionTrigger className="font-hand text-lg py-2 hover:no-underline">
+                    QR & Links
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="p-4 bg-gray-50 border-2 border-dashed border-sketch-black/10 text-center space-y-2">
+                       <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Public Share Link</p>
+                       <p className="text-xs font-mono break-all bg-white p-2 border border-sketch-black/5">{window.location.href}</p>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+            <div className="sketch-card p-6 bg-sketch-pink/5 border-dashed">
+              <p className="font-hand text-lg leading-snug">
+                "Sharing is sketching. Thanks for using SketchDrop to host your {share.isWebsite ? 'site' : 'creation'}!"
+              </p>
+            </div>
+          </aside>
         </main>
       </div>
     </div>
