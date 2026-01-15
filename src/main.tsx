@@ -13,6 +13,7 @@ import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import '@/index.css'
 import { HomePage } from '@/pages/HomePage'
 import { ViewPage } from '@/pages/ViewPage'
+import DashboardPage from '@/pages/DashboardPage'
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -25,6 +26,11 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: <HomePage />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/dashboard",
+    element: <DashboardPage />,
     errorElement: <RouteErrorBoundary />,
   },
   {

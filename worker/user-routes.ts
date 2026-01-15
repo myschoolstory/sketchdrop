@@ -18,12 +18,27 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
       totalSize: files.reduce((acc, f) => acc + f.size, 0),
       isWebsite,
       mainFile: isWebsite ? 'index.html' : files[0].path,
-      files: {} // Filled by entity
+      files: {} 
     };
     await ShareEntity.create(c.env, shareData);
     const entity = new ShareEntity(c.env, id);
     await entity.uploadFiles(files);
     return ok(c, { id });
+  });
+  // Get Shares (with optional filter)
+  app.get('/api/shares', async (c) => {
+    const idsParam = c.req.query('ids');
+    if (idsParam) {
+      const ids = idsParam.split(',').filter(Boolean);
+      const items = await Promise.all(ids.map(async (id) => {
+        const entity = new ShareEntity(c.env, id);
+        if (await entity.exists()) return entity.getState();
+        return null;
+      }));
+      return ok(c, { items: items.filter(Boolean), next: null });
+    }
+    const page = await ShareEntity.list(c.env);
+    return ok(c, page);
   });
   // Get Share Metadata
   app.get('/api/shares/:id', async (c) => {
@@ -34,7 +49,14 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const { files, ...meta } = state;
     return ok(c, meta);
   });
-  // Raw Content Serving (Crucial for hosting)
+  // Delete Share
+  app.delete('/api/shares/:id', async (c) => {
+    const id = c.req.param('id');
+    const existed = await ShareEntity.delete(c.env, id);
+    if (!existed) return notFound(c, 'Share not found');
+    return ok(c, { deleted: true });
+  });
+  // Raw Content Serving
   app.get('/api/content/:id/:path{.+}', async (c) => {
     const id = c.req.param('id');
     const path = c.req.param('path');
@@ -42,7 +64,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     if (!await entity.exists()) return new Response('Not Found', { status: 404 });
     const file = await entity.getFile(path);
     if (!file) return new Response('File Not Found', { status: 404 });
-    const binary = Uint8Array.from(atob(file.content), c => c.charCodeAt(0));
+    const binary = Uint8Array.from(atob(file.content), char => char.charCodeAt(0));
     return new Response(binary, {
       headers: {
         'Content-Type': file.type,
@@ -50,9 +72,5 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
         'Cache-Control': 'public, max-age=3600'
       }
     });
-  });
-  app.get('/api/shares', async (c) => {
-    const page = await ShareEntity.list(c.env);
-    return ok(c, page);
   });
 }
