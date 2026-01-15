@@ -1,12 +1,32 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { UploadWidget } from '@/components/UploadWidget';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Toaster } from '@/components/ui/sonner';
-import { PenTool, Share2, Globe } from 'lucide-react';
+import { PenTool, Share2, Globe, Library } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { SketchButton } from '@/components/ui/sketch-button';
+import { getMyShareIds } from '@/lib/storage';
 export function HomePage() {
+  const [sketchCount, setSketchCount] = useState(0);
+  useEffect(() => {
+    setSketchCount(getMyShareIds().length);
+  }, []);
   return (
     <div className="min-h-screen bg-[#fdfaf6]">
       <ThemeToggle />
+      <div className="absolute top-4 left-4 z-50">
+        <Link to="/dashboard">
+          <SketchButton variant="secondary" className="relative">
+            <Library className="w-4 h-4 mr-2" />
+            My Sketches
+            {sketchCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-sketch-pink text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-sketch-black">
+                {sketchCount}
+              </span>
+            )}
+          </SketchButton>
+        </Link>
+      </div>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="py-12 md:py-20 lg:py-24 space-y-16">
           <header className="text-center space-y-6">
@@ -23,21 +43,21 @@ export function HomePage() {
           <UploadWidget />
           <section className="grid md:grid-cols-3 gap-8 pt-12">
             {[
-              { 
-                icon: <Share2 className="w-6 h-6" />, 
-                title: "Instant Sharing", 
+              {
+                icon: <Share2 className="w-6 h-6" />,
+                title: "Instant Sharing",
                 desc: "Upload images, PDFs, or docs and get a unique link to share with anyone instantly.",
                 color: "bg-blue-100"
               },
-              { 
-                icon: <Globe className="w-6 h-6" />, 
-                title: "Static Hosting", 
+              {
+                icon: <Globe className="w-6 h-6" />,
+                title: "Static Hosting",
                 desc: "Drop a ZIP of your static site (HTML/CSS/JS) and we'll host it live in seconds.",
                 color: "bg-sketch-yellow/20"
               },
-              { 
-                icon: <PenTool className="w-6 h-6" />, 
-                title: "Draft Style", 
+              {
+                icon: <PenTool className="w-6 h-6" />,
+                title: "Draft Style",
                 desc: "Your files deserve a better frame than a boring white page. Welcome to the sketchbook.",
                 color: "bg-sketch-pink/10"
               }
