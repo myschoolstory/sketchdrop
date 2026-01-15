@@ -8,17 +8,18 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
   app.post('/api/shares', async (c) => {
     const { metadata, files } = (await c.req.json()) as { metadata: Partial<ShareMetadata>, files: ShareFile[] };
     if (!files?.length) return bad(c, 'No files provided');
+    if (!files[0]?.path) return bad(c, 'Invalid files provided');
     const id = metadata.id || crypto.randomUUID();
     const isWebsite = files.some(f => f.path.toLowerCase() === 'index.html');
     const shareData = {
       id,
       title: metadata.title || 'My Sketch',
       createdAt: Date.now(),
-      fileCount: files.length,
-      totalSize: files.reduce((acc, f) => acc + f.size, 0),
+      fileCount: 0,
+      totalSize: 0,
       isWebsite,
       mainFile: isWebsite ? 'index.html' : files[0].path,
-      files: {} 
+      files: {}
     };
     await ShareEntity.create(c.env, shareData);
     const entity = new ShareEntity(c.env, id);
