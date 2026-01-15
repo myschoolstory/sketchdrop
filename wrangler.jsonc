@@ -4,7 +4,7 @@
  */
  {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "sketch-drop-upqo6_fkjieaf_vf9sekz",
+	"name": "sketchdrop-2",
 	"main": "worker/index.ts",
 	"compatibility_date": "2025-04-24",
 	"assets": {
