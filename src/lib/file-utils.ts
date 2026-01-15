@@ -48,7 +48,8 @@ function fileToBase64(file: File): Promise<string> {
     reader.onerror = error => reject(error);
   });
 }
-export function getMimeType(filename: string): string {
+export function getMimeType(filename: string | null | undefined): string {
+  if (!filename) return 'application/octet-stream';
   const ext = filename.split('.').pop()?.toLowerCase();
   const mimes: Record<string, string> = {
     'html': 'text/html',

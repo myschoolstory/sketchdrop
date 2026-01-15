@@ -10,6 +10,7 @@ export class ShareEntity extends IndexedEntity<ShareState> {
     fileCount: 0,
     totalSize: 0,
     isWebsite: false,
+    filePaths: [],
     files: {}
   };
   async uploadFiles(files: ShareFile[]): Promise<void> {
@@ -20,10 +21,12 @@ export class ShareEntity extends IndexedEntity<ShareState> {
         fileMap[f.path] = f;
         size += f.size;
       });
+      const filePaths = Object.keys(fileMap);
       return {
         ...state,
         files: fileMap,
-        fileCount: Object.keys(fileMap).length,
+        filePaths: filePaths,
+        fileCount: filePaths.length,
         totalSize: state.totalSize + size
       };
     });
@@ -33,7 +36,6 @@ export class ShareEntity extends IndexedEntity<ShareState> {
     return state.files[path] || null;
   }
 }
-// Keeping boilerplate entities for safety but ShareEntity is primary
 import type { User, Chat, ChatMessage } from "@shared/types";
 export class UserEntity extends IndexedEntity<User> {
   static readonly entityName = "user";

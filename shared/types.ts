@@ -18,6 +18,7 @@ export interface ShareMetadata {
   totalSize: number;
   isWebsite: boolean;
   mainFile?: string; // index.html for websites
+  filePaths: string[];
 }
 export interface ShareState extends ShareMetadata {
   files: Record<string, ShareFile>;

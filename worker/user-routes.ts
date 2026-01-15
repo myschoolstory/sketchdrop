@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import type { Env } from './core-utils';
 import { ShareEntity } from "./entities";
 import { ok, bad, notFound, isStr } from './core-utils';
-import type { ShareFile, ShareMetadata } from "@shared/types";
+import type { ShareFile, ShareMetadata, ShareState } from "@shared/types";
 export function userRoutes(app: Hono<{ Bindings: Env }>) {
   // Create Share
   app.post('/api/shares', async (c) => {
@@ -11,7 +11,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     if (!files[0]?.path) return bad(c, 'Invalid files provided');
     const id = metadata.id || crypto.randomUUID();
     const isWebsite = files.some(f => f.path.toLowerCase() === 'index.html');
-    const shareData = {
+    const shareData: ShareState = {
       id,
       title: metadata.title || 'My Sketch',
       createdAt: Date.now(),
@@ -19,6 +19,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
       totalSize: 0,
       isWebsite,
       mainFile: isWebsite ? 'index.html' : files[0].path,
+      filePaths: [],
       files: {}
     };
     await ShareEntity.create(c.env, shareData);
@@ -33,13 +34,21 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
       const ids = idsParam.split(',').filter(Boolean);
       const items = await Promise.all(ids.map(async (id) => {
         const entity = new ShareEntity(c.env, id);
-        if (await entity.exists()) return entity.getState();
+        if (await entity.exists()) {
+          const state = await entity.getState();
+          const { files, ...meta } = state;
+          return meta;
+        }
         return null;
       }));
       return ok(c, { items: items.filter(Boolean), next: null });
     }
     const page = await ShareEntity.list(c.env);
-    return ok(c, page);
+    const metaItems = page.items.map(item => {
+      const { files, ...meta } = item;
+      return meta;
+    });
+    return ok(c, { items: metaItems, next: page.next });
   });
   // Get Share Metadata
   app.get('/api/shares/:id', async (c) => {

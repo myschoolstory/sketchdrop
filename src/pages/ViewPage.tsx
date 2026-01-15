@@ -5,17 +5,19 @@ import { api } from '@/lib/api-client';
 import type { ShareMetadata } from '@shared/types';
 import { SketchButton } from '@/components/ui/sketch-button';
 import { MediaPreview } from '@/components/MediaPreview';
-import { 
-  ExternalLink, 
-  ArrowLeft, 
-  Download, 
-  FileText, 
-  Globe, 
-  Copy, 
-  Check, 
-  Info, 
-  Calendar, 
-  HardDrive 
+import { getMimeType } from '@/lib/file-utils';
+import {
+  ExternalLink,
+  ArrowLeft,
+  Download,
+  FileText,
+  Globe,
+  Copy,
+  Check,
+  Info,
+  Calendar,
+  HardDrive,
+  Star
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -42,7 +44,7 @@ export function ViewPage() {
     return (
       <div className="max-w-7xl mx-auto px-4 py-20 text-center">
         <div className="inline-block p-4 sketch-card animate-sketch-bounce bg-sketch-yellow">
-           <Globe className="w-12 h-12 animate-spin-slow" />
+           <Globe className="w-12 h-12 animate-pulse" />
         </div>
         <h2 className="text-3xl font-display mt-6">Fetching your sketch...</h2>
       </div>
@@ -63,6 +65,7 @@ export function ViewPage() {
   }
   const contentUrl = `/api/content/${share.id}/${share.mainFile}`;
   const fullContentUrl = `${window.location.origin}${contentUrl}`;
+  const mainFileType = getMimeType(share.mainFile || "");
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="py-8 md:py-10 lg:py-12 space-y-8">
@@ -123,9 +126,9 @@ export function ViewPage() {
                 <div className="w-12 h-1 rounded-full bg-white/20" />
               </div>
               <div className="flex-1 overflow-hidden">
-                <MediaPreview 
-                  url={contentUrl} 
-                  type={share.isWebsite ? 'text/html' : (share.files?.[share.mainFile!]?.type || 'application/octet-stream')}
+                <MediaPreview
+                  url={contentUrl}
+                  type={share.isWebsite ? 'text/html' : mainFileType}
                   title={share.title}
                   isWebsite={share.isWebsite}
                 />
@@ -142,19 +145,33 @@ export function ViewPage() {
               <h4 className="font-display text-xl flex items-center gap-2">
                 <Info className="w-5 h-5" /> Details
               </h4>
-              <Accordion type="single" collapsible className="w-full">
+              <Accordion type="single" collapsible defaultValue="files" className="w-full">
                 <AccordionItem value="files" className="border-sketch-black/10">
                   <AccordionTrigger className="font-hand text-lg py-2 hover:no-underline">
                     File List ({share.fileCount})
                   </AccordionTrigger>
                   <AccordionContent>
-                    <div className="space-y-2 pt-2 max-h-[300px] overflow-y-auto pr-2">
-                      {share.mainFile && (
-                        <div className="text-sm font-mono p-2 bg-sketch-yellow/10 border border-sketch-black/5 rounded truncate flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full bg-sketch-pink shrink-0" />
-                          {share.mainFile}
+                    <div className="space-y-2 pt-2 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin">
+                      {(share.filePaths || [share.mainFile]).filter(Boolean).map((path) => (
+                        <div 
+                          key={path}
+                          className={cn(
+                            "text-sm font-mono p-2 border rounded truncate flex items-center justify-between gap-2 group",
+                            path === share.mainFile 
+                              ? "bg-sketch-yellow/10 border-sketch-black/20" 
+                              : "bg-white border-sketch-black/5 hover:border-sketch-black/20"
+                          )}
+                        >
+                          <div className="flex items-center gap-2 truncate">
+                            <span className={cn(
+                              "w-2 h-2 rounded-full shrink-0",
+                              path === share.mainFile ? "bg-sketch-pink" : "bg-gray-300"
+                            )} />
+                            <span className="truncate">{path}</span>
+                          </div>
+                          {path === share.mainFile && <Star className="w-3 h-3 text-sketch-pink shrink-0" />}
                         </div>
-                      )}
+                      ))}
                     </div>
                   </AccordionContent>
                 </AccordionItem>
@@ -165,7 +182,7 @@ export function ViewPage() {
                   <AccordionContent>
                     <div className="p-4 bg-gray-50 border-2 border-dashed border-sketch-black/10 text-center space-y-2">
                        <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Public Share Link</p>
-                       <p className="text-xs font-mono break-all bg-white p-2 border border-sketch-black/5">{window.location.href}</p>
+                       <p className="text-xs font-mono break-all bg-white p-2 border border-sketch-black/5 selection:bg-sketch-yellow">{window.location.href}</p>
                     </div>
                   </AccordionContent>
                 </AccordionItem>
